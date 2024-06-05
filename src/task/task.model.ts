@@ -75,4 +75,5 @@ Task.init(
 User.hasMany(Task, { foreignKey: "uid" });
 Task.belongsTo(User, { foreignKey: "uid" });
 
+console.log(`Task Model Sync Status : ${Task === sequelize.models.Task}`);
 export { TaskStatus, Task };

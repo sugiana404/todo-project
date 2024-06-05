@@ -44,6 +44,6 @@ User.init(
   }
 );
 
-console.log(User === sequelize.models.User);
+console.log(`User Model Sync Status : ${User === sequelize.models.User}`);
 
 export { User };
