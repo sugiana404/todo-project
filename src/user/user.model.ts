@@ -1,9 +1,33 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model, type Optional } from "sequelize";
 import { sequelize } from "../db/db.config.js";
 
-const User = sequelize.define(
-  "User",
+interface UserAttributes {
+  id: number;
+  username: string;
+  password: string;
+}
+
+interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
+
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
+  public id!: number;
+  public username!: string;
+  public password!: string;
+
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+User.init(
   {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -14,6 +38,8 @@ const User = sequelize.define(
     },
   },
   {
+    sequelize,
+    modelName: "User",
     freezeTableName: true,
   }
 );

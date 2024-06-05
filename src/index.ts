@@ -4,6 +4,8 @@ import { sequelize } from "./db/db.config.js";
 import { config } from "./config/env.variable.config.js";
 
 import { userRouter } from "./user/user.route.js";
+import { taskRouter } from "./task/task.route.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 async function startDBConnection(): Promise<void> {
   try {
@@ -22,6 +24,9 @@ const PORT = config.PORT || 3001;
 
 app.use(express.json());
 app.use("/user", userRouter);
+app.use("/task", taskRouter);
+
+app.use(errorMiddleware);
 
 function startServer(): void {
   app.listen(PORT, () => {
