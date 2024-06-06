@@ -1,14 +1,17 @@
 import type { Model } from "sequelize";
-import { User } from "./user.model.js";
+import { User } from "./auth.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { BadRequestError } from "../utils/error.types.js";
+import { BadRequestError, DataNotFoundError } from "../../utils/error.types.js";
 
-async function createUserService(username: string, password: string) {
+export async function createUserService(username: string, password: string) {
   try {
     const isUserExist = await User.findOne({ where: { username: username } });
     if (isUserExist !== null) {
-      throw new BadRequestError("username have been used");
+      throw new BadRequestError("Username have been used", {
+        resourceType: "User",
+        resourceId: username,
+      });
     }
 
     const saltRounds = 10;
@@ -24,27 +27,27 @@ async function createUserService(username: string, password: string) {
   }
 }
 
-async function getAllUserService(): Promise<Model<any, any>[]> {
-  try {
-    const users = await User.findAll();
-    return users;
-  } catch (error) {
-    throw new Error(`${error}`);
-  }
-}
-
-async function loginService(username: string, password: string): Promise<{}> {
+export async function loginService(
+  username: string,
+  password: string
+): Promise<{}> {
   try {
     const user = await User.findOne({ where: { username: username } });
     if (user === null) {
-      throw new Error("User didn't exists");
+      throw new DataNotFoundError("Username not registered", {
+        resourceType: "User",
+        resourceId: username,
+      });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
-      throw new Error("Username or password is wrong");
+      throw new BadRequestError("Username or password is wrong", {
+        resourceType: "User",
+      });
     }
+
     var token = jwt.sign({ id: user.id, username: user.username }, "secret", {
       expiresIn: "1h",
     });
@@ -55,8 +58,7 @@ async function loginService(username: string, password: string): Promise<{}> {
     };
     return data;
   } catch (error) {
-    throw new Error(`${error}`);
+    console.log(`error : ${error}`);
+    throw error;
   }
 }
-
-export { createUserService, getAllUserService, loginService };

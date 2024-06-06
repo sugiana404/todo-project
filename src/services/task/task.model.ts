@@ -1,11 +1,28 @@
-import { DataTypes, Model, type EnumDataType, type Optional } from "sequelize";
-import { sequelize } from "../db/db.config.js";
-import { User } from "../user/user.model.js";
+import { DataTypes, Model, type Optional } from "sequelize";
+import { sequelize } from "../../db/db.config.js";
+import { User } from "../auth/auth.model.js";
+import { BadRequestError } from "../../utils/error.types.js";
 
 enum TaskStatus {
   NotStarted = "Not Started",
   OnProgress = "On Progress",
   Finished = "Finished",
+}
+
+function mapStatus(status: string): TaskStatus {
+  const statusMap: Record<string, TaskStatus> = {
+    "Not Started": TaskStatus.NotStarted,
+    "On Progress": TaskStatus.OnProgress,
+    Finished: TaskStatus.Finished,
+  };
+  const mappedStatus = statusMap[status];
+  if (!mappedStatus) {
+    throw new BadRequestError("Invalid status", {
+      resourceType: "Task",
+      resourceValue: status,
+    });
+  }
+  return mappedStatus;
 }
 
 interface TaskAttributes {
@@ -76,4 +93,4 @@ User.hasMany(Task, { foreignKey: "uid" });
 Task.belongsTo(User, { foreignKey: "uid" });
 
 console.log(`Task Model Sync Status : ${Task === sequelize.models.Task}`);
-export { TaskStatus, Task };
+export { TaskStatus, mapStatus, Task };

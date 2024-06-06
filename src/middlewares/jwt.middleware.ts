@@ -3,13 +3,13 @@ import { type Request, type Response, type NextFunction } from "express";
 import { BadRequestError } from "../utils/error.types.js";
 
 interface MyJwtPayLoad extends JwtPayload {
-  uid?: number;
+  uid: number;
 }
 
 declare global {
   namespace Express {
     interface Request {
-      uid?: number;
+      uid: number;
     }
   }
 }
@@ -25,26 +25,20 @@ export async function jwtValidator(
 
     if (!token) {
       throw new BadRequestError("Token not provided");
-    } else {
-      console.log(
-        `token payload: ${JSON.stringify(jwt.verify(token, "secret"))}`
-      );
-      jwt.verify(token, "secret", (err, decoded) => {
-        if (err) {
-          return res
-            .status(401)
-            .json({ error: "Failed to authenticate token" });
-        }
+    }
 
-        req.uid = (decoded as MyJwtPayLoad)?.id;
-        next();
-      });
-    }
+    jwt.verify(token, "secret", (err, decoded) => {
+      if (err) {
+        throw new BadRequestError("Token expired or invalid", {
+          resourceType: "Auth",
+          resourceValue: token,
+        });
+      }
+
+      req.uid = (decoded as MyJwtPayLoad)?.id;
+      next();
+    });
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({ error: "Unauthorized" });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 }
